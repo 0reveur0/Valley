@@ -27,6 +27,7 @@ enum TransactionType {
   Upload_Reward
   Download_Cost
   Subscription_Purchase
+  Daily_Reward
 }
 
 enum TransactionStatus {
@@ -51,6 +52,7 @@ model User {
   transactions    Transaction[]
   accounts        Account[]
   sessions        Session[]
+  dailyCheckins   UserDailyCheckin[]
 
   @@map("users")
 }
@@ -124,6 +126,18 @@ model Document {
   category        Category       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
 
   @@map("documents")
+}
+
+model UserDailyCheckin {
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id")
+  checkedInDate  DateTime @map("checked_in_date") @db.Date
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, checkedInDate])
+  @@map("user_daily_checkins")
 }
 
 model Transaction {

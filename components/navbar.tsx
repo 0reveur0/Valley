@@ -30,6 +30,9 @@ export default async function Navbar() {
               <Link href="/upload" className="transition hover:text-white">
                 Tải lên
               </Link>
+              <Link href="/earn-credits" className="transition hover:text-violet-400">
+                Kiếm điểm
+              </Link>
             </>
           )}
           {user?.role === 'Admin' && (

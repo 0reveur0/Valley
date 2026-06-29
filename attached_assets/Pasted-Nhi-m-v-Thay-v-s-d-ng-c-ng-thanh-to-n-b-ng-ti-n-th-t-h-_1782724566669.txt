@@ -1,0 +1,26 @@
+Nhiệm vụ: Thay vì sử dụng cổng thanh toán bằng tiền thật, hãy lập trình trang "Kiếm Điểm Thưởng" (Earn Credits Dashboard) và logic tính năng "Điểm danh hàng ngày" (Daily Check-in) cho dự án Valley bằng Next.js App Router, Tailwind CSS và Prisma.
+
+Yêu cầu logic chi tiết:
+
+1. Thêm bảng Database mới (Prisma Schema):
+Hãy cập nhật schema để lưu lịch sử điểm danh của người dùng nhằm tránh việc một ngày họ bấm nhận điểm nhiều lần:
+- UserDailyCheckins: id, user_id (FK), checked_in_date (Date - chỉ lưu ngày/tháng/năm), created_at.
+
+2. Phía Server (API Điểm danh: /api/user/daily-checkin):
+- API này phải được bảo vệ bởi NextAuth session.
+- Bước 1: Lấy ngày hiện tại (YYYY-MM-DD). Kiểm tra trong bảng UserDailyCheckins xem user_id này đã có bản ghi nào trùng với ngày hôm nay chưa.
+- Bước 2: Nếu đã điểm danh rồi, trả về lỗi status 400 kèm message "Hôm nay bạn đã nhận điểm rồi, quay lại vào ngày mai nhé!".
+- Bước 3: Nếu chưa điểm danh, dùng Prisma Transaction để:
+  + Tạo một bản ghi mới vào bảng UserDailyCheckins.
+  + Cộng thêm 2 điểm (credits) vào tài khoản của User trong bảng Users.
+  + Ghi một lịch sử vào bảng Transactions với `type: 'Daily_Reward'` và `points: 2`.
+- Trả về kết quả thành công kèm số điểm mới của user.
+
+3. Phía Client (Giao diện trang nhiệm vụ - app/earn-credits/page.tsx):
+- Thiết kế giao diện bằng Tailwind CSS hiển thị số điểm hiện tại của user thật nổi bật.
+- Tạo một Card "Điểm danh hàng ngày": Hiển thị nút "Bấm để nhận 2 credits miễn phí". 
+  + Khi user bấm nút, gọi API điểm danh ở trên.
+  + Nếu thành công, hiển thị hiệu ứng chúc mừng (Confetti hoặc Alert) và cập nhật số điểm trên màn hình. Nếu thất bại (do đã điểm danh), làm mờ nút và đổi chữ thành "Đã nhận điểm hôm nay".
+- Tạo thêm các Card Mockup hướng dẫn các cách kiếm điểm khác để người dùng biết (Ví dụ: "Tải lên 1 tài liệu được duyệt: Nhận 10 credits", "Chia sẻ tài liệu cho bạn bè: Nhận 5 credits").
+
+Hãy viết mã nguồn chi tiết bằng TypeScript cho API Route và trang Frontend trên.
