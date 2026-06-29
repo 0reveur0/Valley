@@ -1,138 +1,172 @@
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, Upload, Star, Users, TrendingUp, CheckCircle } from "lucide-react";
+import { CheckCircle2, Clock3, Lock } from "lucide-react";
 
-function useSiteStats() {
-  return useQuery({
-    queryKey: ["stats"],
-    queryFn: async () => {
-      const res = await apiFetch("/api/stats");
-      if (!res.ok) return { totalDocs: 0, totalUsers: 0 };
-      return res.json();
-    },
-    staleTime: 60_000,
-  });
-}
+const features = [
+  {
+    emoji: "🎯",
+    title: "Mastery Learning",
+    desc: "Hoàn thành bài kiểm tra đạt 80% để mở khóa bài tiếp theo. Bạn tự chủ lộ trình, chỉ so sánh với chính mình của hôm qua.",
+  },
+  {
+    emoji: "📝",
+    title: "Ghi chú thông minh",
+    desc: "Xem tài liệu, video và ghi chú cùng lúc, tự động bắt mốc thời gian.",
+  },
+  {
+    emoji: "💬",
+    title: "Không gian thảo luận",
+    desc: "Góc thảo luận kiểu Notion Docs, nơi mentor và AI luôn sẵn sàng đồng hành cùng bạn.",
+  },
+  {
+    emoji: "✨",
+    title: "Phản hồi AI chi tiết",
+    desc: "Sau mỗi bài nộp, nhận phản hồi cụ thể từ AI — không chấm điểm, chỉ chỉ ra điểm mạnh và hướng cải thiện.",
+  },
+  {
+    emoji: "📋",
+    title: "Kanban Workspace",
+    desc: "Quản lý bài tập kiểu Kanban nhẹ nhàng: Chưa làm → Đang làm → Chờ chấm → Hoàn thành.",
+  },
+];
 
-function useFeaturedDocs() {
-  return useQuery({
-    queryKey: ["documents", "featured"],
-    queryFn: async () => {
-      const res = await apiFetch("/api/documents");
-      if (!res.ok) return { documents: [] };
-      return res.json();
-    },
-    staleTime: 60_000,
-  });
-}
+const lessons = [
+  { status: "done", label: "TypeScript Fundamentals", note: "Đã hoàn thành" },
+  { status: "active", label: "Microservices Architecture", note: "Đang học" },
+  { status: "locked", label: "Advanced AI Prompting", note: "Chưa mở khóa" },
+];
 
 export default function HomePage() {
   const { data: user } = useAuth();
-  const { data: stats } = useSiteStats();
-  const { data: featured } = useFeaturedDocs();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white">
-      <section className="max-w-7xl mx-auto px-4 py-20 text-center">
-        <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 text-sm font-medium px-3 py-1 rounded-full mb-6">
-          <Star className="w-4 h-4" />
-          <span>Nền tảng chia sẻ tài liệu học thuật #1</span>
-        </div>
-        <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-          Chia sẻ tri thức,<br />
-          <span className="text-emerald-600">Lan rộng học vấn</span>
-        </h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
-          Valley là nơi sinh viên và giảng viên chia sẻ tài liệu học tập chất lượng.
-          Tải lên — kiếm điểm — tải xuống tài liệu bạn cần.
+    <div
+      className="min-h-screen bg-zinc-50 text-zinc-800"
+      style={{ fontFamily: "'DM Sans', sans-serif" }}
+    >
+      {/* ── Hero ── */}
+      <section className="max-w-3xl mx-auto px-6 pt-28 pb-20 text-center">
+        <p className="text-xs tracking-widest uppercase text-zinc-400 mb-8 font-medium">
+          Valley · Học tập bình yên
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/explore">
-            <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700 gap-2">
-              <BookOpen className="w-5 h-5" />
-              Khám phá tài liệu
-            </Button>
+        <h1 className="text-4xl sm:text-5xl font-semibold text-zinc-900 leading-tight mb-6">
+          Thong thả học,{" "}
+          <span className="italic font-light text-zinc-500">thực chất master.</span>
+        </h1>
+        <p className="text-base sm:text-lg text-zinc-500 leading-relaxed max-w-xl mx-auto mb-10 font-light">
+          Không gian học tập và chia sẻ tài liệu bình yên, nơi bạn có thể đi theo cách riêng của
+          mình. Không áp lực, không bảng xếp hạng — chỉ có bạn và tri thức.
+        </p>
+        <div className="flex items-center justify-center gap-4 flex-wrap">
+          <Link href={user ? "/explore" : "/register"}>
+            <button className="px-6 py-3 bg-zinc-900 text-zinc-50 text-sm font-medium rounded-xl hover:bg-zinc-700 transition-colors shadow-sm">
+              Bắt đầu ngay
+            </button>
           </Link>
-          {!user && (
-            <Link href="/register">
-              <Button size="lg" variant="outline" className="gap-2">
-                <Upload className="w-5 h-5" />
-                Đăng ký miễn phí
-              </Button>
-            </Link>
-          )}
+          <Link href="/explore">
+            <button className="px-6 py-3 text-zinc-500 text-sm font-medium rounded-xl border border-zinc-200 hover:border-zinc-300 hover:text-zinc-700 transition-colors">
+              Xem giới thiệu
+            </button>
+          </Link>
         </div>
       </section>
 
-      <section className="bg-white py-12 border-y">
-        <div className="max-w-7xl mx-auto px-4 grid grid-cols-2 sm:grid-cols-4 gap-8 text-center">
-          {[
-            { icon: BookOpen, label: "Tài liệu", value: stats?.totalDocs ?? "..." },
-            { icon: Users, label: "Thành viên", value: stats?.totalUsers ?? "..." },
-            { icon: TrendingUp, label: "Điểm thưởng / tài liệu", value: "10" },
-            { icon: CheckCircle, label: "Kiểm duyệt AI", value: "100%" },
-          ].map(({ icon: Icon, label, value }) => (
-            <div key={label}>
-              <Icon className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-              <div className="text-3xl font-bold text-gray-900">{value}</div>
-              <div className="text-sm text-gray-500 mt-1">{label}</div>
+      {/* ── Workspace Preview ── */}
+      <section className="max-w-2xl mx-auto px-6 pb-24">
+        <div className="border border-zinc-100 rounded-2xl bg-white shadow-[0_2px_20px_rgba(0,0,0,0.04)] overflow-hidden">
+          {/* Window chrome */}
+          <div className="flex items-center gap-2 px-5 py-4 border-b border-zinc-100">
+            <span className="w-3 h-3 rounded-full bg-zinc-200" />
+            <span className="w-3 h-3 rounded-full bg-zinc-200" />
+            <span className="w-3 h-3 rounded-full bg-zinc-200" />
+            <span className="ml-3 text-xs text-zinc-400 font-medium">workspace / của tôi</span>
+          </div>
+          {/* Lesson list */}
+          <div className="divide-y divide-zinc-50">
+            {lessons.map(({ status, label, note }) => (
+              <div
+                key={label}
+                className={`flex items-center gap-4 px-6 py-4 ${
+                  status === "active" ? "bg-zinc-50" : ""
+                }`}
+              >
+                {status === "done" && <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />}
+                {status === "active" && <Clock3 className="w-5 h-5 text-amber-400 flex-shrink-0 animate-pulse" />}
+                {status === "locked" && <Lock className="w-5 h-5 text-zinc-300 flex-shrink-0" />}
+                <div className="flex-1 min-w-0">
+                  <p
+                    className={`text-sm font-medium truncate ${
+                      status === "locked" ? "text-zinc-300" : "text-zinc-700"
+                    }`}
+                  >
+                    {label}
+                  </p>
+                </div>
+                <span
+                  className={`text-[11px] font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${
+                    status === "done"
+                      ? "bg-emerald-50 text-emerald-500"
+                      : status === "active"
+                      ? "bg-amber-50 text-amber-500"
+                      : "bg-zinc-100 text-zinc-300"
+                  }`}
+                >
+                  {note}
+                </span>
+              </div>
+            ))}
+          </div>
+          {/* Caption */}
+          <div className="px-6 py-5 border-t border-zinc-100">
+            <p className="text-xs text-zinc-400 leading-relaxed font-light">
+              Thiết kế cho người học, không phải cho điểm số. Mỗi tính năng đều giúp bạn thực sự
+              hiểu bài — không hơn không kém.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Features ── */}
+      <section className="max-w-3xl mx-auto px-6 pb-28">
+        <p className="text-xs tracking-widest uppercase text-zinc-400 text-center mb-10 font-medium">
+          Tính năng cốt lõi
+        </p>
+        <div className="grid sm:grid-cols-2 gap-px bg-zinc-100 border border-zinc-100 rounded-2xl overflow-hidden">
+          {features.map(({ emoji, title, desc }, i) => (
+            <div
+              key={title}
+              className={`bg-white px-7 py-7 ${
+                i === features.length - 1 && features.length % 2 !== 0
+                  ? "sm:col-span-2"
+                  : ""
+              }`}
+            >
+              <span className="text-2xl mb-3 block">{emoji}</span>
+              <h3 className="text-sm font-semibold text-zinc-800 mb-2">{title}</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed font-light">{desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {featured?.documents?.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 py-16">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8">Tài liệu nổi bật</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featured.documents.map((doc: any) => (
-              <Link key={doc.id} href={`/documents/${doc.slug ?? doc.id}`}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
-                  <CardContent className="p-5">
-                    <h3 className="font-semibold text-gray-900 line-clamp-2 mb-2">{doc.title}</h3>
-                    <p className="text-sm text-gray-500 mb-3">bởi {doc.uploaderEmail}</p>
-                    <div className="flex items-center gap-4 text-xs text-gray-400">
-                      <span>{doc.totalPages} trang</span>
-                      <span>{doc.viewCount} lượt xem</span>
-                      <span className="ml-auto text-emerald-600 font-medium">{doc.pointsRequired} điểm</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-          <div className="text-center mt-8">
-            <Link href="/explore">
-              <Button variant="outline">Xem tất cả tài liệu →</Button>
-            </Link>
-          </div>
-        </section>
-      )}
-
-      <section className="bg-emerald-600 text-white py-16">
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">Cách thức hoạt động</h2>
-          <div className="grid sm:grid-cols-3 gap-8 mt-10">
-            {[
-              { step: "1", title: "Đăng ký", desc: "Tạo tài khoản miễn phí và nhận 10 điểm chào mừng" },
-              { step: "2", title: "Đăng tải", desc: "Chia sẻ tài liệu PDF và kiếm 10 điểm mỗi tài liệu" },
-              { step: "3", title: "Tải xuống", desc: "Dùng điểm để tải tài liệu chất lượng từ cộng đồng" },
-            ].map(({ step, title, desc }) => (
-              <div key={step} className="text-center">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
-                  {step}
-                </div>
-                <h3 className="font-semibold text-lg mb-2">{title}</h3>
-                <p className="text-emerald-100 text-sm">{desc}</p>
-              </div>
-            ))}
-          </div>
+      {/* ── Quote ── */}
+      <section className="max-w-2xl mx-auto px-6 pb-28 text-center">
+        <div className="border-t border-b border-zinc-100 py-16">
+          <blockquote className="text-2xl sm:text-3xl font-light text-zinc-700 leading-snug mb-5">
+            "Không có học sinh chậm — chỉ có hệ thống{" "}
+            <span className="italic">chưa đủ kiên nhẫn.</span>"
+          </blockquote>
+          <cite className="text-sm text-zinc-400 not-italic tracking-wide">— Valley</cite>
         </div>
       </section>
+
+      {/* ── Footer ── */}
+      <footer className="text-center pb-16 px-6">
+        <p className="text-sm text-zinc-400 font-light">
+          Miễn phí. Không quảng cáo. Không điểm số phán xét.{" "}
+          <span className="text-zinc-500">Thong thả học nhé. ☕</span>
+        </p>
+      </footer>
     </div>
   );
 }

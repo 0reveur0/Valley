@@ -1,0 +1,37 @@
+Nhiệm vụ: Hãy làm lại hoàn toàn giao diện và văn phong của Trang chủ (Landing Page - app/page.tsx) cho dự án Valley theo phong cách thiết kế Tối giản, Bình yên (Calm & Minimalist Design). Tuyệt đối không dùng các giao diện dạng khối cứng nhắc hay màu sắc quá rực rỡ.
+
+Yêu cầu về Thẩm mỹ & Giao diện (Design System):
+1. Font chữ: Áp dụng duy nhất font 'Elms Sans' (hoặc một font Sans-serif nhẹ nhàng, thanh lịch tương đương có sẵn trên Google Fonts phù hợp với tiếng Việt) cho toàn bộ trang web để tạo cảm giác tinh tế, dễ chịu.
+2. Màu sắc & Không gian: Sử dụng tone màu nền sáng/kem nhạt (ví dụ: slate-50, zinc-50 hoặc một màu trắng ấm), kết hợp với màu chữ xám đậm (zinc-800) để giảm mỏi mắt. Sử dụng các khoảng trắng (padding/margin lớn) để các phần tử "thở" được, không nhồi nhét.
+3. Hiệu ứng: Các đường viền (borders) nếu có phải rất mảnh và mờ (zinc-100). Các nút bấm sử dụng bo góc mềm mại, đổ bóng cực nhẹ.
+
+Yêu cầu về Nội dung & Văn phong (Copywriting):
+Hãy thay đổi toàn bộ văn phong cũ thành ngôn từ nhẹ nhàng, thấu hiểu dưới đây:
+
+- Hero Section:
+  + Tiêu đề chính: "Thong thả học, thực chất master."
+  + Tiêu đề phụ: "Không gian học tập và chia sẻ tài liệu bình yên, nơi bạn có thể đi theo cách riêng của mình. Không áp lực, không bảng xếp hạng — chỉ có bạn và tri thức."
+  + Nút bấm (CTA): "Bắt đầu ngay" (Nền tối, chữ sáng, bo góc mượt) và "Xem giới thiệu" (Nút viền mảnh hoặc dạng text link).
+
+- Workspace Preview Component (Mô phỏng một Workspace học tập nhỏ ngay trên Landing Page):
+  + Tạo một khung giao diện mô phỏng (Mockup Workspace) tinh tế với các trạng thái bài học trực quan:
+    ✓ Đã xong: TypeScript Fundamentals
+    ⏳ Đang làm: Microservices Architecture
+    🔒 Chưa mở: Advanced AI Prompting
+  + Câu chốt: "Thiết kế cho người học, không phải cho điểm số. Mỗi tính năng đều giúp bạn thực sự hiểu bài — không hơn không kém."
+
+- Core Features Section (Các tính năng cốt lõi - Hiển thị dạng lưới tối giản, không dùng icon màu mè, dùng icon nét mảnh hoặc emoji tinh tế):
+  1. Mastery Learning: Hoàn thành bài kiểm tra đạt 80% để mở khóa bài tiếp theo. Bạn tự chủ lộ trình, chỉ so sánh với chính mình của hôm qua.
+  2. Ghi chú thông minh: Xem tài liệu, video và ghi chú cùng lúc, tự động bắt mốc thời gian.
+  3. Không gian thảo luận: Góc thảo luận kiểu Notion Docs, nơi mentor và AI luôn sẵn sàng đồng hành cùng bạn.
+  4. Phản hồi AI chi tiết: Sau mỗi bài nộp, nhận phản hồi cụ thể từ AI — không chấm điểm, chỉ chỉ ra điểm mạnh và hướng cải thiện.
+  5. Kanban Workspace: Quản lý bài tập kiểu Kanban nhẹ nhàng: Chưa làm → Đang làm → Chờ chấm → Hoàn thành.
+
+- Section Quote (Thông điệp cuối):
+  Hiển thị một câu nói lớn, căn giữa trang đầy nghệ thuật:
+  "Không có học sinh chậm — chỉ có hệ thống chưa đủ kiên nhẫn." — Valley
+
+- Footer:
+  "Miễn phí. Không quảng cáo. Không điểm số phán xét. Thong thả học nhé. ☕"
+
+Hãy viết lại mã nguồn chi tiết bằng TypeScript cho app/page.tsx, sử dụng Tailwind CSS để hiện thực hóa đúng tinh thần nghệ thuật, tối giản và bình yên này.
