@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "12UlkShzGcN1O-Jf8nGHf"
+uri = "file://HUONG_DAN_KHOI_CHAY.md"
+type = "text"
+title = "Hướng dẫn khởi chạy Valley (Localhost + Vercel)"
