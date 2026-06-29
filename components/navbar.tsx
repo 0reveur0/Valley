@@ -19,8 +19,8 @@ export default async function Navbar() {
 
         {/* Centre nav links */}
         <nav className="hidden items-center gap-6 text-sm text-slate-400 md:flex">
-          <Link href="/#featured" className="transition hover:text-white">
-            Tài liệu
+          <Link href="/explore" className="transition hover:text-white">
+            Khám phá
           </Link>
           {user && (
             <>
