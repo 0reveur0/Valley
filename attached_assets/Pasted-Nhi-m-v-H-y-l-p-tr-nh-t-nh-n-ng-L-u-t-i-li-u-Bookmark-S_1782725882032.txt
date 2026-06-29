@@ -1,0 +1,23 @@
+Nhiệm vụ: Hãy lập trình tính năng Lưu tài liệu (Bookmark/Save) và Quản lý Bộ sưu tập (Collections) cho dự án Valley bằng Next.js App Router, Tailwind CSS và Prisma.
+
+Yêu cầu logic và cấu trúc chi tiết:
+
+1. Cập nhật Database (Prisma Schema):
+Hãy thêm các bảng sau vào schema.prisma để quản lý việc lưu trữ của người dùng:
+- SavedDocument: id, user_id (FK), document_id (FK), saved_at (Đảm bảo mỗi user chỉ lưu 1 tài liệu 1 lần - Unique constraint trên cặp user_id và document_id).
+- Collection: id, user_id (FK), name (Tên bộ sưu tập, ví dụ: "Tài liệu học kỳ 1"), description (Mô tả), is_public (Boolean - cho phép người khác xem bộ sưu tập này không), created_at.
+- CollectionDocument: id, collection_id (FK), document_id (FK), added_at (Bảng trung gian để 1 bộ sưu tập chứa nhiều tài liệu).
+
+2. Phía Server (Các API Routes):
+- API POST/DELETE `/api/documents/[id]/save`: Xử lý việc Bấm lưu hoặc Hủy lưu tài liệu của user hiện tại.
+- API POST `/api/collections/create`: Cho phép tạo một Bộ sưu tập mới.
+- API POST/DELETE `/api/collections/[id]/documents`: Thêm hoặc xóa tài liệu khỏi một bộ sưu tập cụ thể.
+- API GET `/api/user/saved-items`: Lấy toàn bộ danh sách tài liệu đã lưu và các bộ sưu tập của user đó để hiển thị ở trang Cá nhân.
+
+3. Phía Client (Giao diện UI):
+- Tại Trang chi tiết tài liệu (`app/documents/[slug]/page.tsx`): Thêm nút "Lưu tài liệu" (Icon Bookmark). Nếu bấm vào, icon sẽ chuyển sang trạng thái đã lưu (Filled Bookmark). Đồng thời có một nút "Thêm vào bộ sưu tập" để mở ra danh sách các bộ sưu tập hiện có của user đó để họ tích chọn nhanh.
+- Tại Trang Workspace cá nhân (`app/workspace/page.tsx`): Thêm một Tab lớn bên cạnh Kanban cũ có tên là "Thư viện của tôi". Tab này sẽ chia làm 2 phần nhỏ:
+  + Danh sách tài liệu đã lưu (Hiển thị dưới dạng Grid Card).
+  + Danh sách các Bộ sưu tập cá nhân (Hiển thị dạng các folder, bấm vào folder nào thì mở ra danh sách tài liệu bên trong folder đó).
+
+Hãy viết mã nguồn chi tiết bằng TypeScript cho cấu trúc DB, các API Route xử lý luồng logic và giao diện UI components tương ứng sử dụng Tailwind CSS.
