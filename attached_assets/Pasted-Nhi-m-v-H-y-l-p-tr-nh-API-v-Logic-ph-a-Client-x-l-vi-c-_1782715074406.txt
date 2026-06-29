@@ -1,0 +1,22 @@
+Nhiệm vụ: Hãy lập trình API và Logic phía Client xử lý việc "Trừ điểm để tải tài liệu" (Download Credit System) cho dự án Valley bằng Next.js API Routes và Prisma.
+
+Yêu cầu logic chi tiết:
+
+1. Phía Server (API Route: /api/documents/[id]/download-request):
+- API này phải được bảo mật bằng NextAuth session.
+- Bước 1 (Kiểm tra quyền): Đọc thông tin User từ DB. Nếu User là `membership_type === 'Premium'` HOẶC user chính là tác giả của tài liệu (`user_id === document.user_id`), bỏ qua bước trừ điểm và chuyển sang Bước 3.
+- Bước 2 (Xử lý điểm nếu là tài khoản Free): 
+  + Kiểm tra xem số điểm hiện tại của user (`user.credits`) có lớn hơn hoặc bằng số điểm yêu cầu của tài liệu (`document.points_required`) không. Nếu không đủ, trả về lỗi status 402 (Payment Required) kèm message "Bạn không đủ điểm để tải tài liệu này".
+  + Nếu đủ điểm, dùng Prisma Transaction để thực hiện đồng thời 3 việc (đảm bảo tính toàn vẹn dữ liệu - Atomicity):
+    1. Trừ điểm của user tải: `user.credits - document.points_required`.
+    2. Cộng điểm cho tác giả (người upload): `author.credits + 2` (Ví dụ thưởng 2 điểm cho người đóng góp).
+    3. Ghi nhận vào bảng `Transactions` với loại hành động (type) tương ứng.
+- Bước 3 (Tạo Link Download): Cập nhật tăng `download_count` của tài liệu lên 1. Trả về liên kết tải file PDF gốc từ Cloudinary cho Client.
+
+2. Phía Client (Xử lý tại Component Button "Tải xuống"):
+- Khi user bấm nút "Tải tài liệu":
+  + Gọi API `/api/documents/[id]/download-request`.
+  + Nếu thành công (nhận được link tài liệu), tự động kích hoạt trình duyệt tải file xuống mà không chuyển hướng trang (sử dụng thuộc tính download hoặc fetch file rồi tạo Object URL).
+  + Nếu thất bại vì thiếu điểm, hiển thị một Modal thông báo: "Bạn không đủ điểm. Hãy tải lên tài liệu của bạn để nhận thêm điểm thưởng, hoặc nâng cấp tài khoản Premium để tải không giới hạn."
+
+Hãy viết mã nguồn chi tiết bằng TypeScript cho API Route và đoạn xử lý tương tác của Button phía Frontend. Đảm bảo xử lý tranh chấp dữ liệu (Concurrency) bằng Prisma Transaction một cách an toàn.
