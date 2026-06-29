@@ -6,6 +6,7 @@ import { eq, desc, or, ilike, and, sql } from "drizzle-orm";
 import { requireAuth } from "../lib/auth-middleware";
 import { cloudinary } from "../lib/cloudinary";
 import { moderateContentWithAI } from "../lib/ai-moderation";
+import { createNotification } from "../lib/notifications";
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
@@ -167,12 +168,24 @@ router.post("/documents/upload", requireAuth, upload.single("file"), async (req,
         await tx.update(usersTable).set({ credits: sql`${usersTable.credits} + ${UPLOAD_REWARD_CREDITS}` }).where(eq(usersTable.id, req.session.userId!));
       });
       req.session.credits = (req.session.credits ?? 0) + UPLOAD_REWARD_CREDITS;
+      await createNotification(
+        req.session.userId!,
+        "Tài liệu của bạn đã được xuất bản!",
+        `Tài liệu "${title}" đã được AI kiểm duyệt và xuất bản. Bạn nhận được +${UPLOAD_REWARD_CREDITS} điểm.`,
+        `/documents/${slug}`,
+      );
       res.status(201).json({ message: `Tài liệu đã được duyệt! Bạn nhận +${UPLOAD_REWARD_CREDITS} điểm.`, document: { id: slug, title, status: "Approved" }, creditsAwarded: UPLOAD_REWARD_CREDITS });
       return;
     }
 
     if (moderation.status === "Rejected") {
       await db.insert(documentsTable).values({ ...baseDoc, status: "Rejected", rejectionReason: moderation.reason || "Nội dung không phù hợp." });
+      await createNotification(
+        req.session.userId!,
+        "Tài liệu bị từ chối",
+        `Tài liệu "${title}" bị từ chối: ${moderation.reason || "Nội dung không phù hợp."}`,
+        "/workspace",
+      );
       res.status(422).json({ error: "Tài liệu bị từ chối bởi hệ thống kiểm duyệt.", rejectionReason: moderation.reason, document: { id: slug, title, status: "Rejected" } });
       return;
     }
@@ -274,6 +287,15 @@ router.post("/documents/:id/download-request", requireAuth, async (req, res) => 
     }
 
     await db.update(documentsTable).set({ downloadCount: sql`${documentsTable.downloadCount} + 1` }).where(eq(documentsTable.id, doc.id));
+
+    if (!isAuthor) {
+      await createNotification(
+        doc.userId,
+        "Tài liệu của bạn vừa được tải xuống!",
+        `Tài liệu "${doc.title}" của bạn vừa được tải xuống. Bạn nhận được +2 điểm.`,
+        `/documents/${doc.id}`,
+      );
+    }
 
     res.json({
       message: "Download request processed successfully.",

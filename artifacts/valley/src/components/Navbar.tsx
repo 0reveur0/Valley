@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useAuth, useLogout } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Upload, LayoutDashboard, LogOut, User, Star } from "lucide-react";
+import NotificationBell from "@/components/NotificationBell";
 
 export default function Navbar() {
   const { data: user } = useAuth();
@@ -52,6 +53,7 @@ export default function Navbar() {
                     </Button>
                   </Link>
                 )}
+                <NotificationBell />
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
                     {user.credits} điểm
