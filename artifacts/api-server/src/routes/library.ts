@@ -96,6 +96,37 @@ router.post("/collections", requireAuth, async (req, res) => {
   }
 });
 
+router.patch("/collections/:colId", requireAuth, async (req, res) => {
+  try {
+    const colId = String(req.params.colId);
+    const [col] = await db
+      .select()
+      .from(collectionsTable)
+      .where(eq(collectionsTable.id, colId))
+      .limit(1);
+    if (!col || col.userId !== req.session.userId) {
+      res.status(404).json({ error: "Không tìm thấy bộ sưu tập." });
+      return;
+    }
+    const name = typeof req.body.name === "string" ? req.body.name.trim() : "";
+    const description =
+      typeof req.body.description === "string" ? req.body.description.trim() : col.description;
+    if (!name || name.length > 100) {
+      res.status(400).json({ error: "Tên bộ sưu tập không hợp lệ (1-100 ký tự)." });
+      return;
+    }
+    const [updated] = await db
+      .update(collectionsTable)
+      .set({ name, description: description ?? undefined })
+      .where(eq(collectionsTable.id, colId))
+      .returning();
+    res.json({ collection: updated });
+  } catch (err) {
+    req.log.error({ err }, "rename collection error");
+    res.status(500).json({ error: "Internal server error." });
+  }
+});
+
 router.delete("/collections/:colId", requireAuth, async (req, res) => {
   try {
     const colId = String(req.params.colId);

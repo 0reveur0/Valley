@@ -13,6 +13,7 @@ import UploadPage from "@/pages/upload";
 import WorkspacePage from "@/pages/workspace";
 import AdminPage from "@/pages/admin";
 import EarnCreditsPage from "@/pages/earn-credits";
+import CollectionDetailPage from "@/pages/collection-detail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +35,7 @@ function Router() {
         <Route path="/workspace" component={WorkspacePage} />
         <Route path="/admin" component={AdminPage} />
         <Route path="/earn-credits" component={EarnCreditsPage} />
+        <Route path="/collections/:id" component={CollectionDetailPage} />
         <Route component={NotFound} />
       </Switch>
     </>

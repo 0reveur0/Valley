@@ -107,25 +107,32 @@ function CollectionFolder({
 
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden">
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors text-left"
-      >
-        {open ? <FolderOpen className="w-5 h-5 text-amber-500 shrink-0" /> : <Folder className="w-5 h-5 text-amber-400 shrink-0" />}
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-sm text-gray-900 truncate">{col.name}</p>
-          {col.description && <p className="text-xs text-gray-400 truncate">{col.description}</p>}
-        </div>
-        <div className="flex items-center gap-2">
+      <div className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors">
+        <button
+          onClick={() => setOpen(!open)}
+          className="flex items-center gap-3 flex-1 min-w-0 text-left"
+        >
+          {open ? <FolderOpen className="w-5 h-5 text-amber-500 shrink-0" /> : <Folder className="w-5 h-5 text-amber-400 shrink-0" />}
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-sm text-gray-900 truncate">{col.name}</p>
+            {col.description && <p className="text-xs text-gray-400 truncate">{col.description}</p>}
+          </div>
+        </button>
+        <div className="flex items-center gap-1 shrink-0">
+          <Link href={`/collections/${col.id}`}>
+            <button className="p-1.5 text-gray-400 hover:text-emerald-600 transition-colors rounded" title="Mở trang chi tiết">
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </Link>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(col.id); }}
-            className="p-1 text-gray-300 hover:text-red-400 transition-colors"
+            className="p-1.5 text-gray-300 hover:text-red-400 transition-colors rounded"
+            title="Xoá bộ sưu tập"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
-          <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-90" : ""}`} />
         </div>
-      </button>
+      </div>
 
       {open && (
         <div className="border-t border-gray-100 bg-gray-50 p-4">
