@@ -1,7 +1,8 @@
+import path from "path";
 import { Router } from "express";
 import multer from "multer";
 import { db } from "@workspace/db";
-import { documentsTable, categoriesTable, usersTable } from "@workspace/db";
+import { documentsTable, categoriesTable, usersTable, transactionsTable } from "@workspace/db";
 import { eq, desc, or, ilike, and, sql } from "drizzle-orm";
 import { requireAuth } from "../lib/auth-middleware";
 import { cloudinary } from "../lib/cloudinary";
@@ -9,15 +10,48 @@ import { moderateContentWithAI } from "../lib/ai-moderation";
 import { createNotification } from "../lib/notifications";
 
 const router = Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
 const PAGE_SIZE = 12;
 const UPLOAD_REWARD_CREDITS = 10;
+const MAX_UPLOAD_COUNT_PER_HOUR = 3;
+const ALLOWED_UPLOAD_EXTENSIONS = [".pdf", ".docx", ".pptx", ".epub"];
+const ALLOWED_MIME_TYPES = [
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/epub+zip",
+];
+
+function multerUploadMiddleware(req: any, res: any, next: any) {
+  upload.single("file")(req, res, (err) => {
+    if (!err) return next();
+
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(413).json({ error: "Tài liệu vượt quá 15MB. Hãy nén file hoặc chia nhỏ tài liệu để chia sẻ thong thả nhé!" });
+    }
+
+    return res.status(400).json({ error: err.message || "Không thể tải tệp lên." });
+  });
+}
 
 async function getOrCreateDefaultCategory(txDb: typeof db) {
   const [existing] = await txDb.select().from(categoriesTable).limit(1);
   if (existing) return existing.id;
   const [cat] = await txDb.insert(categoriesTable).values({ name: "General", slug: "general" }).returning();
   return cat.id;
+}
+
+function isAllowedUploadFile(fileName: string, mimeType: string) {
+  const extension = path.extname(fileName).toLowerCase();
+  return ALLOWED_UPLOAD_EXTENSIONS.includes(extension) && ALLOWED_MIME_TYPES.includes(mimeType);
+}
+
+async function countRecentUploads(userId: string) {
+  const oneHourAgo = new Date(Date.now() - 1000 * 60 * 60);
+  const [result] = await db.select({ count: sql<number>`cast(count(*) as int)` })
+    .from(documentsTable)
+    .where(and(eq(documentsTable.userId, userId), sql`${documentsTable.createdAt} >= ${oneHourAgo}`));
+  return result.count;
 }
 
 router.get("/stats", async (req, res) => {
@@ -111,21 +145,41 @@ router.get("/documents/search", async (req, res) => {
   }
 });
 
-router.post("/documents/upload", requireAuth, upload.single("file"), async (req, res) => {
+router.post("/documents/upload", requireAuth, multerUploadMiddleware, async (req, res) => {
   try {
     const file = req.file;
     if (!file) {
       res.status(400).json({ error: "No file uploaded." });
       return;
     }
-    if (!file.originalname.toLowerCase().endsWith(".pdf")) {
-      res.status(400).json({ error: "Only PDF files are allowed." });
+
+    const [currentUser] = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId!)).limit(1);
+    if (!currentUser) {
+      res.status(404).json({ error: "User not found." });
+      return;
+    }
+
+    if (currentUser.membershipType !== "Premium") {
+      const oneHourAgo = new Date(Date.now() - 1000 * 60 * 60);
+      const [uploadCount] = await db.select({ count: sql<number>`cast(count(*) as int)` })
+        .from(documentsTable)
+        .where(and(eq(documentsTable.userId, currentUser.id), sql`${documentsTable.createdAt} >= ${oneHourAgo}`));
+
+      if (uploadCount.count >= MAX_UPLOAD_COUNT_PER_HOUR) {
+        res.status(429).json({ error: "Bạn đang chia sẻ hơi nhanh rồi. Hãy nghỉ tay uống tách trà và quay lại sau ít phút nhé." });
+        return;
+      }
+    }
+
+    const extension = path.extname(file.originalname).toLowerCase();
+    if (!ALLOWED_UPLOAD_EXTENSIONS.includes(extension) || !ALLOWED_MIME_TYPES.includes(file.mimetype.toLowerCase())) {
+      res.status(415).json({ error: "Định dạng tệp không hợp lệ. Vui lòng chọn PDF, DOCX, PPTX hoặc EPUB." });
       return;
     }
 
     const titleRaw = req.body.title;
     const descRaw = req.body.description;
-    const title = typeof titleRaw === "string" && titleRaw.trim() ? titleRaw.trim() : file.originalname.replace(/\.pdf$/i, "");
+    const title = typeof titleRaw === "string" && titleRaw.trim() ? titleRaw.trim() : file.originalname.replace(/\.[^.]+$/i, "");
     const description = typeof descRaw === "string" ? descRaw.trim() : "";
 
     let uploadResult: { secure_url: string; pages?: number };
@@ -231,7 +285,23 @@ router.get("/documents/:id", async (req, res) => {
     const isOwner = isAuthenticated && req.session.userId === doc.userId;
     const isPremium = req.session.membershipType === "Premium";
 
-    res.json({ ...doc, isAuthenticated, isOwner, isPremium });
+    let hasUnlocked = doc.pointsRequired === 0 || isOwner || isPremium;
+    if (isAuthenticated && !hasUnlocked) {
+      const [unlockTx] = await db.select({ id: transactionsTable.id })
+        .from(transactionsTable)
+        .where(
+          and(
+            eq(transactionsTable.userId, req.session.userId!),
+            eq(transactionsTable.documentId, doc.id),
+            eq(transactionsTable.type, "Download_Cost"),
+            eq(transactionsTable.status, "Completed"),
+          ),
+        )
+        .limit(1);
+      hasUnlocked = !!unlockTx;
+    }
+
+    res.json({ ...doc, isAuthenticated, isOwner, isPremium, hasUnlocked });
   } catch (err) {
     req.log.error({ err }, "getDocument error");
     res.status(500).json({ error: "Internal server error." });
@@ -281,27 +351,22 @@ router.post("/documents/:id/download-request", requireAuth, async (req, res) => 
         await tx.update(usersTable)
           .set({ credits: sql`${usersTable.credits} + 2` })
           .where(eq(usersTable.id, doc.userId));
-        return updated;
+        await tx.insert(transactionsTable).values({
+          userId: currentUser.id,
+          documentId: doc.id,
+          type: "Download_Cost",
+          points: doc.pointsRequired,
+          status: "Completed",
+        });
+        return updated[0];
       });
-      req.session.credits = debitResult.credits;
+
+      res.json({
+        message: "Download request processed successfully.",
+        downloadUrl: doc.fileUrl,
+        document: { id: doc.id, title: doc.title, pointsRequired: doc.pointsRequired },
+      });
     }
-
-    await db.update(documentsTable).set({ downloadCount: sql`${documentsTable.downloadCount} + 1` }).where(eq(documentsTable.id, doc.id));
-
-    if (!isAuthor) {
-      await createNotification(
-        doc.userId,
-        "Tài liệu của bạn vừa được tải xuống!",
-        `Tài liệu "${doc.title}" của bạn vừa được tải xuống. Bạn nhận được +2 điểm.`,
-        `/documents/${doc.id}`,
-      );
-    }
-
-    res.json({
-      message: "Download request processed successfully.",
-      downloadUrl: doc.fileUrl,
-      document: { id: doc.id, title: doc.title, pointsRequired: doc.pointsRequired },
-    });
   } catch (err) {
     req.log.error({ err }, "downloadRequest error");
     res.status(500).json({ error: "Internal server error." });

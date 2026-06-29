@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Elms+Sans:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
@@ -157,7 +158,7 @@
   --chart-4: 38 92% 50%;
   --chart-5: 0 84% 60%;
 
-  --app-font-sans: 'Inter', sans-serif;
+  --app-font-sans: 'Elms Sans', ui-sans-serif, system-ui;
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
   --radius: .5rem;

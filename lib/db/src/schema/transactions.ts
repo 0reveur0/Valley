@@ -11,6 +11,7 @@ export const transactionStatusEnum = pgEnum("transaction_status", ["Pending", "C
 export const transactionsTable = pgTable("transactions", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id").notNull(),
+  documentId: text("document_id").notNull(),
   type: transactionTypeEnum("type").notNull(),
   points: integer("points").notNull().default(0),
   amount: decimal("amount", { precision: 10, scale: 2 }),

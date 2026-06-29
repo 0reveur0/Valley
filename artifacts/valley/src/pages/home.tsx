@@ -1,6 +1,5 @@
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { CheckCircle2, Clock3, Lock } from "lucide-react";
 
 const features = [
   {
@@ -32,8 +31,8 @@ const features = [
 
 const lessons = [
   { status: "done", label: "TypeScript Fundamentals", note: "Đã hoàn thành" },
-  { status: "active", label: "Microservices Architecture", note: "Đang học" },
-  { status: "locked", label: "Advanced AI Prompting", note: "Chưa mở khóa" },
+  { status: "active", label: "Microservices Architecture", note: "Đang làm" },
+  { status: "locked", label: "Advanced AI Prompting", note: "Chưa mở" },
 ];
 
 export default function HomePage() {
@@ -41,74 +40,69 @@ export default function HomePage() {
 
   return (
     <div
-      className="min-h-screen bg-zinc-50 text-zinc-800"
-      style={{ fontFamily: "'DM Sans', sans-serif" }}
+      className="min-h-screen bg-slate-50 text-zinc-800 antialiased"
+      style={{ fontFamily: "'Elms Sans', ui-sans-serif, system-ui" }}
     >
-      {/* ── Hero ── */}
-      <section className="max-w-3xl mx-auto px-6 pt-28 pb-20 text-center">
-        <p className="text-xs tracking-widest uppercase text-zinc-400 mb-8 font-medium">
-          Valley · Học tập bình yên
-        </p>
-        <h1 className="text-4xl sm:text-5xl font-semibold text-zinc-900 leading-tight mb-6">
-          Thong thả học,{" "}
-          <span className="italic font-light text-zinc-500">thực chất master.</span>
-        </h1>
-        <p className="text-base sm:text-lg text-zinc-500 leading-relaxed max-w-xl mx-auto mb-10 font-light">
-          Không gian học tập và chia sẻ tài liệu bình yên, nơi bạn có thể đi theo cách riêng của
-          mình. Không áp lực, không bảng xếp hạng — chỉ có bạn và tri thức.
-        </p>
-        <div className="flex items-center justify-center gap-4 flex-wrap">
-          <Link href={user ? "/explore" : "/register"}>
-            <button className="px-6 py-3 bg-zinc-900 text-zinc-50 text-sm font-medium rounded-xl hover:bg-zinc-700 transition-colors shadow-sm">
-              Bắt đầu ngay
-            </button>
-          </Link>
-          <Link href="/explore">
-            <button className="px-6 py-3 text-zinc-500 text-sm font-medium rounded-xl border border-zinc-200 hover:border-zinc-300 hover:text-zinc-700 transition-colors">
-              Xem giới thiệu
-            </button>
-          </Link>
+      <section className="max-w-6xl mx-auto px-6 py-20 sm:py-24">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-xs tracking-[0.35em] uppercase text-zinc-400 mb-8 font-medium">
+            Valley · Học tập bình yên
+          </p>
+          <h1 className="text-4xl sm:text-5xl font-semibold text-zinc-900 leading-tight sm:leading-tight">
+            Thong thả học, <span className="italic font-light text-zinc-700">thực chất master.</span>
+          </h1>
+          <p className="mt-8 text-base sm:text-lg text-zinc-500 leading-relaxed sm:px-4">
+            Không gian học tập và chia sẻ tài liệu bình yên, nơi bạn có thể đi theo cách riêng của mình.
+            Không áp lực, không bảng xếp hạng — chỉ có bạn và tri thức.
+          </p>
+          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <Link href={user ? "/explore" : "/register"}>
+              <button className="inline-flex items-center justify-center rounded-full bg-zinc-900 px-7 py-3 text-sm font-semibold text-white shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors hover:bg-zinc-800">
+                Bắt đầu ngay
+              </button>
+            </Link>
+            <Link href="/explore">
+              <button className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-7 py-3 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-300 hover:text-zinc-900">
+                Xem giới thiệu
+              </button>
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* ── Workspace Preview ── */}
-      <section className="max-w-2xl mx-auto px-6 pb-24">
-        <div className="border border-zinc-100 rounded-2xl bg-white shadow-[0_2px_20px_rgba(0,0,0,0.04)] overflow-hidden">
-          {/* Window chrome */}
-          <div className="flex items-center gap-2 px-5 py-4 border-b border-zinc-100">
-            <span className="w-3 h-3 rounded-full bg-zinc-200" />
-            <span className="w-3 h-3 rounded-full bg-zinc-200" />
-            <span className="w-3 h-3 rounded-full bg-zinc-200" />
-            <span className="ml-3 text-xs text-zinc-400 font-medium">workspace / của tôi</span>
+      <section className="max-w-6xl mx-auto px-6 pb-24">
+        <div className="rounded-[32px] border border-zinc-100 bg-white p-6 shadow-sm sm:p-8">
+          <div className="flex items-center gap-2 rounded-[24px] border border-zinc-100 bg-slate-50 px-4 py-3 text-xs text-zinc-500">
+            <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
+            <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
+            <span className="h-2.5 w-2.5 rounded-full bg-zinc-300" />
+            <span className="ml-3 font-medium">Workspace xem trước</span>
           </div>
-          {/* Lesson list */}
-          <div className="divide-y divide-zinc-50">
+
+          <div className="mt-6 divide-y divide-zinc-100">
             {lessons.map(({ status, label, note }) => (
               <div
                 key={label}
-                className={`flex items-center gap-4 px-6 py-4 ${
-                  status === "active" ? "bg-zinc-50" : ""
+                className={`flex flex-col gap-4 rounded-[24px] px-5 py-5 sm:flex-row sm:items-center ${
+                  status === "active" ? "bg-slate-50" : ""
                 }`}
               >
-                {status === "done" && <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />}
-                {status === "active" && <Clock3 className="w-5 h-5 text-amber-400 flex-shrink-0 animate-pulse" />}
-                {status === "locked" && <Lock className="w-5 h-5 text-zinc-300 flex-shrink-0" />}
-                <div className="flex-1 min-w-0">
-                  <p
-                    className={`text-sm font-medium truncate ${
-                      status === "locked" ? "text-zinc-300" : "text-zinc-700"
-                    }`}
-                  >
+                <div className="flex h-12 w-12 items-center justify-center rounded-3xl border border-zinc-100 text-lg text-zinc-600">
+                  {status === "done" ? "✓" : status === "active" ? "⏳" : "🔒"}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className={`text-sm font-semibold ${status === "locked" ? "text-zinc-400" : "text-zinc-800"}`}>
                     {label}
                   </p>
+                  <p className="mt-1 text-xs text-zinc-500">{note}</p>
                 </div>
                 <span
-                  className={`text-[11px] font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${
+                  className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold ${
                     status === "done"
-                      ? "bg-emerald-50 text-emerald-500"
+                      ? "bg-zinc-100 text-zinc-600"
                       : status === "active"
-                      ? "bg-amber-50 text-amber-500"
-                      : "bg-zinc-100 text-zinc-300"
+                      ? "bg-zinc-100 text-zinc-600"
+                      : "bg-zinc-50 text-zinc-400"
                   }`}
                 >
                   {note}
@@ -116,55 +110,40 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-          {/* Caption */}
-          <div className="px-6 py-5 border-t border-zinc-100">
-            <p className="text-xs text-zinc-400 leading-relaxed font-light">
-              Thiết kế cho người học, không phải cho điểm số. Mỗi tính năng đều giúp bạn thực sự
-              hiểu bài — không hơn không kém.
-            </p>
+
+          <div className="mt-6 rounded-[24px] border border-zinc-100 bg-slate-50 px-5 py-5 text-sm text-zinc-500">
+            Thiết kế cho người học, không phải cho điểm số. Mỗi tính năng đều giúp bạn thực sự hiểu bài — không hơn không kém.
           </div>
         </div>
       </section>
 
-      {/* ── Features ── */}
-      <section className="max-w-3xl mx-auto px-6 pb-28">
-        <p className="text-xs tracking-widest uppercase text-zinc-400 text-center mb-10 font-medium">
+      <section className="max-w-6xl mx-auto px-6 pb-28">
+        <p className="text-xs tracking-[0.35em] uppercase text-zinc-400 text-center mb-10 font-medium">
           Tính năng cốt lõi
         </p>
-        <div className="grid sm:grid-cols-2 gap-px bg-zinc-100 border border-zinc-100 rounded-2xl overflow-hidden">
-          {features.map(({ emoji, title, desc }, i) => (
-            <div
-              key={title}
-              className={`bg-white px-7 py-7 ${
-                i === features.length - 1 && features.length % 2 !== 0
-                  ? "sm:col-span-2"
-                  : ""
-              }`}
-            >
-              <span className="text-2xl mb-3 block">{emoji}</span>
-              <h3 className="text-sm font-semibold text-zinc-800 mb-2">{title}</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed font-light">{desc}</p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {features.map(({ emoji, title, desc }) => (
+            <div key={title} className="rounded-[32px] border border-zinc-100 bg-white p-6 shadow-sm">
+              <div className="mb-4 text-2xl leading-none">{emoji}</div>
+              <h3 className="text-base font-semibold text-zinc-900 mb-2">{title}</h3>
+              <p className="text-sm leading-relaxed text-zinc-500">{desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── Quote ── */}
-      <section className="max-w-2xl mx-auto px-6 pb-28 text-center">
-        <div className="border-t border-b border-zinc-100 py-16">
-          <blockquote className="text-2xl sm:text-3xl font-light text-zinc-700 leading-snug mb-5">
-            "Không có học sinh chậm — chỉ có hệ thống{" "}
-            <span className="italic">chưa đủ kiên nhẫn.</span>"
+      <section className="max-w-6xl mx-auto px-6 pb-24">
+        <div className="rounded-[36px] border border-zinc-100 bg-white px-8 py-16 text-center shadow-sm sm:px-12">
+          <blockquote className="text-2xl sm:text-3xl font-light text-zinc-900 leading-tight">
+            “Không có học sinh chậm — chỉ có hệ thống <span className="italic font-medium">chưa đủ kiên nhẫn.</span>”
           </blockquote>
-          <cite className="text-sm text-zinc-400 not-italic tracking-wide">— Valley</cite>
+          <p className="mt-8 text-sm text-zinc-500 uppercase tracking-[0.2em]">— Valley</p>
         </div>
       </section>
 
-      {/* ── Footer ── */}
       <footer className="text-center pb-16 px-6">
-        <p className="text-sm text-zinc-400 font-light">
-          Miễn phí. Không quảng cáo. Không điểm số phán xét.{" "}
-          <span className="text-zinc-500">Thong thả học nhé. ☕</span>
+        <p className="text-sm text-zinc-500 font-light">
+          Miễn phí. Không quảng cáo. Không điểm số phán xét. <span className="text-zinc-600">Thong thả học nhé. ☕</span>
         </p>
       </footer>
     </div>
