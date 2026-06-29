@@ -62,9 +62,9 @@ router.get("/documents/search", async (req, res) => {
     const page = Math.max(1, parseInt(String(req.query.page ?? "1"), 10));
 
     const baseWhere = eq(documentsTable.status, "Approved");
-    const whereClause = q
-      ? and(baseWhere, or(ilike(documentsTable.title, `%${q}%`), ilike(documentsTable.description, `%${q}%`)))
-      : baseWhere;
+    const textFilter = q ? or(ilike(documentsTable.title, `%${q}%`), ilike(documentsTable.description, `%${q}%`)) : undefined;
+    const catFilter = category ? eq(categoriesTable.slug, category) : undefined;
+    const whereClause = and(baseWhere, textFilter, catFilter);
 
     const orderByClause = sort === "most_viewed" ? desc(documentsTable.viewCount) : desc(documentsTable.createdAt);
 
@@ -90,7 +90,7 @@ router.get("/documents/search", async (req, res) => {
         .orderBy(orderByClause)
         .limit(PAGE_SIZE)
         .offset((page - 1) * PAGE_SIZE),
-      db.select({ count: sql<number>`cast(count(*) as int)` }).from(documentsTable).where(whereClause as any),
+      db.select({ count: sql<number>`cast(count(*) as int)` }).from(documentsTable).innerJoin(categoriesTable, eq(documentsTable.categoryId, categoriesTable.id)).where(whereClause as any),
       db.select().from(categoriesTable).orderBy(categoriesTable.name),
     ]);
 
@@ -225,7 +225,9 @@ router.get("/documents/:id", async (req, res) => {
 router.post("/documents/:id/download-request", requireAuth, async (req, res) => {
   try {
     const id = String(req.params.id);
-    const [doc] = await db.select().from(documentsTable).where(eq(documentsTable.id, id)).limit(1);
+    const [doc] = await db.select().from(documentsTable)
+      .where(or(eq(documentsTable.id, id), eq(documentsTable.slug, id)))
+      .limit(1);
     if (!doc) {
       res.status(404).json({ error: "Document not found." });
       return;

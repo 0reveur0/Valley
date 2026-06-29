@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable, documentsTable, userDailyCheckinsTable } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { requireAuth } from "../lib/auth-middleware";
 
 const router = Router();
@@ -44,10 +44,9 @@ router.get("/user/workspace", requireAuth, async (req, res) => {
 router.get("/user/daily-checkin", requireAuth, async (req, res) => {
   try {
     const today = new Date().toISOString().slice(0, 10);
-    const [existing] = await db.select().from(userDailyCheckinsTable)
-      .where(eq(userDailyCheckinsTable.userId, req.session.userId!))
-      .limit(100);
-    const checkedInToday = existing?.checkedInDate === today;
+    const rows = await db.select().from(userDailyCheckinsTable)
+      .where(eq(userDailyCheckinsTable.userId, req.session.userId!));
+    const checkedInToday = rows.some((r) => r.checkedInDate === today);
     res.json({ checkedInToday });
   } catch (err) {
     req.log.error({ err }, "getCheckinStatus error");
@@ -67,21 +66,15 @@ router.post("/user/daily-checkin", requireAuth, async (req, res) => {
       return;
     }
 
-    await db.transaction(async (tx) => {
+    const [updatedUser] = await db.transaction(async (tx) => {
       await tx.insert(userDailyCheckinsTable).values({ userId, checkedInDate: today });
-      await tx.update(usersTable).set({ credits: db.select({ val: usersTable.credits }).from(usersTable).where(eq(usersTable.id, userId)).as("sub") as any }).where(eq(usersTable.id, userId));
+      return tx.update(usersTable)
+        .set({ credits: sql`${usersTable.credits} + ${DAILY_REWARD_POINTS}` })
+        .where(eq(usersTable.id, userId))
+        .returning({ credits: usersTable.credits });
     });
 
-    const [updatedUser] = await db.update(usersTable)
-      .set({ credits: db.select({ val: usersTable.credits }).from(usersTable).where(eq(usersTable.id, userId)).as("sub") as any })
-      .where(eq(usersTable.id, userId))
-      .returning({ credits: usersTable.credits });
-
-    const [user] = await db.select({ credits: usersTable.credits }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-    const currentCredits = user?.credits ?? req.session.credits ?? 0;
-    const newCredits = currentCredits + DAILY_REWARD_POINTS;
-
-    await db.update(usersTable).set({ credits: newCredits }).where(eq(usersTable.id, userId));
+    const newCredits = updatedUser?.credits ?? (req.session.credits ?? 0) + DAILY_REWARD_POINTS;
     req.session.credits = newCredits;
 
     res.json({ message: "Điểm danh thành công!", newCredits, pointsEarned: DAILY_REWARD_POINTS });

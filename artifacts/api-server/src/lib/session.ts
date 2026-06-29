@@ -1,5 +1,8 @@
 import session from "express-session";
 
+if (process.env.NODE_ENV === "production" && !process.env.SESSION_SECRET) {
+  throw new Error("SESSION_SECRET environment variable must be set in production.");
+}
 const SESSION_SECRET = process.env.SESSION_SECRET ?? "valley-dev-secret-change-in-prod";
 
 export const sessionMiddleware = session({
