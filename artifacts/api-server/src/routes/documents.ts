@@ -82,6 +82,7 @@ router.get("/documents/search", async (req, res) => {
         categoryName: categoriesTable.name,
         categorySlug: categoriesTable.slug,
         uploaderEmail: usersTable.email,
+        uploaderId: usersTable.id,
       })
         .from(documentsTable)
         .innerJoin(usersTable, eq(documentsTable.userId, usersTable.id))
@@ -199,6 +200,7 @@ router.get("/documents/:id", async (req, res) => {
       status: documentsTable.status,
       userId: documentsTable.userId,
       uploaderEmail: usersTable.email,
+      uploaderId: usersTable.id,
     })
       .from(documentsTable)
       .innerJoin(usersTable, eq(documentsTable.userId, usersTable.id))

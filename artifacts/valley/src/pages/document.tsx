@@ -142,7 +142,17 @@ export default function DocumentPage() {
                   <span className="flex items-center gap-1"><Eye className="w-4 h-4" />{doc.viewCount} lượt xem</span>
                   <span className="flex items-center gap-1"><Download className="w-4 h-4" />{doc.downloadCount} lượt tải</span>
                   <span>{doc.totalPages} trang</span>
-                  {doc.uploaderEmail && <span>bởi <strong>{doc.uploaderEmail}</strong></span>}
+                  {doc.uploaderEmail && (
+                    <span>
+                      bởi{" "}
+                      <Link
+                        href={`/profile/${doc.uploaderId}`}
+                        className="font-semibold text-emerald-600 hover:underline"
+                      >
+                        {doc.uploaderEmail.split("@")[0]}
+                      </Link>
+                    </span>
+                  )}
                 </div>
 
                 {/* Star rating display */}

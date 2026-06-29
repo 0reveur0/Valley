@@ -1,7 +1,12 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable, documentsTable, userDailyCheckinsTable } from "@workspace/db";
-import { eq, desc, sql } from "drizzle-orm";
+import {
+  usersTable,
+  documentsTable,
+  userDailyCheckinsTable,
+  collectionsTable,
+} from "@workspace/db";
+import { eq, desc, sql, and } from "drizzle-orm";
 import { requireAuth } from "../lib/auth-middleware";
 
 const router = Router();
@@ -81,6 +86,87 @@ router.post("/user/daily-checkin", requireAuth, async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "dailyCheckin error");
     res.status(500).json({ error: "Lỗi máy chủ. Vui lòng thử lại sau." });
+  }
+});
+
+/* ───────── PUBLIC PROFILE ───────── */
+
+router.get("/users/:userId/profile", async (req, res) => {
+  try {
+    const userId = String(req.params.userId);
+
+    const [user] = await db
+      .select({
+        id: usersTable.id,
+        membershipType: usersTable.membershipType,
+        role: usersTable.role,
+        createdAt: usersTable.createdAt,
+        email: usersTable.email,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.id, userId))
+      .limit(1);
+
+    if (!user) {
+      res.status(404).json({ error: "Người dùng không tồn tại." });
+      return;
+    }
+
+    const [documents, collections] = await Promise.all([
+      db
+        .select({
+          id: documentsTable.id,
+          title: documentsTable.title,
+          slug: documentsTable.slug,
+          totalPages: documentsTable.totalPages,
+          viewCount: documentsTable.viewCount,
+          downloadCount: documentsTable.downloadCount,
+          pointsRequired: documentsTable.pointsRequired,
+          createdAt: documentsTable.createdAt,
+        })
+        .from(documentsTable)
+        .where(
+          and(
+            eq(documentsTable.userId, userId),
+            eq(documentsTable.status, "Approved"),
+          ),
+        )
+        .orderBy(desc(documentsTable.createdAt)),
+
+      db
+        .select({
+          id: collectionsTable.id,
+          name: collectionsTable.name,
+          description: collectionsTable.description,
+          createdAt: collectionsTable.createdAt,
+        })
+        .from(collectionsTable)
+        .where(
+          and(
+            eq(collectionsTable.userId, userId),
+            eq(collectionsTable.isPublic, 1),
+          ),
+        )
+        .orderBy(desc(collectionsTable.createdAt)),
+    ]);
+
+    const displayName = user.email.split("@")[0];
+
+    res.json({
+      user: {
+        id: user.id,
+        displayName,
+        membershipType: user.membershipType,
+        role: user.role,
+        createdAt: user.createdAt,
+        totalApprovedDocs: documents.length,
+      },
+      documents,
+      collections,
+    });
+  } catch (err) {
+    req.log.error({ err }, "publicProfile error");
+    res.status(500).json({ error: "Internal server error." });
   }
 });
 
