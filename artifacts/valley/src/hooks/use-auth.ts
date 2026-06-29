@@ -7,6 +7,7 @@ export type AuthUser = {
   role: "Admin" | "User";
   membershipType: "Free" | "Premium";
   credits: number;
+  referralCode?: string | null;
 };
 
 export function useAuth() {
@@ -39,7 +40,7 @@ export function useLogin() {
 export function useRegister() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (body: { email: string; password: string }) => {
+    mutationFn: async (body: { email: string; password: string; referralCode?: string }) => {
       const res = await apiFetch("/api/auth/register", { method: "POST", body: JSON.stringify(body) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Registration failed");

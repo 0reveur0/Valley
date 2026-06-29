@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useAuth, useLogout } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Upload, LayoutDashboard, LogOut, User } from "lucide-react";
+import { BookOpen, Upload, LayoutDashboard, LogOut, User, Star } from "lucide-react";
 
 export default function Navbar() {
   const { data: user } = useAuth();
@@ -30,6 +30,12 @@ export default function Navbar() {
                   <Button variant="ghost" size="sm" className="gap-1">
                     <Upload className="w-4 h-4" />
                     <span className="hidden sm:inline">Đăng tải</span>
+                  </Button>
+                </Link>
+                <Link href="/earn-credits">
+                  <Button variant="ghost" size="sm" className="gap-1 text-amber-600 hover:text-amber-700">
+                    <Star className="w-4 h-4" />
+                    <span className="hidden sm:inline">Kiếm điểm</span>
                   </Button>
                 </Link>
                 <Link href="/workspace">
