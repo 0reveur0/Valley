@@ -140,7 +140,8 @@ router.post("/documents/upload", requireAuth, upload.single("file"), async (req,
         stream.end(file.buffer);
       });
     } else {
-      uploadResult = { secure_url: `https://example.com/docs/${Date.now()}.pdf`, pages: 10 };
+      res.status(503).json({ error: "File storage is not configured. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET." });
+      return;
     }
 
     const previewPattern = process.env.CLOUDINARY_CLOUD_NAME
@@ -254,11 +255,20 @@ router.post("/documents/:id/download-request", requireAuth, async (req, res) => 
         res.status(402).json({ error: "Bạn không đủ điểm để tải tài liệu này", code: "INSUFFICIENT_CREDITS" });
         return;
       }
-      await db.transaction(async (tx) => {
-        await tx.update(usersTable).set({ credits: sql`${usersTable.credits} - ${doc.pointsRequired}` }).where(and(eq(usersTable.id, currentUser.id), sql`${usersTable.credits} >= ${doc.pointsRequired}`));
-        await tx.update(usersTable).set({ credits: sql`${usersTable.credits} + 2` }).where(eq(usersTable.id, doc.userId));
+      const [debitResult] = await db.transaction(async (tx) => {
+        const updated = await tx.update(usersTable)
+          .set({ credits: sql`${usersTable.credits} - ${doc.pointsRequired}` })
+          .where(and(eq(usersTable.id, currentUser.id), sql`${usersTable.credits} >= ${doc.pointsRequired}`))
+          .returning({ credits: usersTable.credits });
+        if (updated.length === 0) {
+          throw new Error("CONCURRENT_CREDIT_DEBIT_FAILED");
+        }
+        await tx.update(usersTable)
+          .set({ credits: sql`${usersTable.credits} + 2` })
+          .where(eq(usersTable.id, doc.userId));
+        return updated;
       });
-      req.session.credits = Math.max(0, (req.session.credits ?? 0) - doc.pointsRequired);
+      req.session.credits = debitResult.credits;
     }
 
     await db.update(documentsTable).set({ downloadCount: sql`${documentsTable.downloadCount} + 1` }).where(eq(documentsTable.id, doc.id));
