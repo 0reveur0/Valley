@@ -1,0 +1,116 @@
+import { pgTable, text, integer, boolean, timestamp, pgEnum } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod/v4";
+
+export const documentStatusEnum = pgEnum("document_status", ["Pending", "Approved", "Rejected"]);
+
+export const categoriesTable = pgTable("categories", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull().unique(),
+  slug: text("slug").notNull().unique(),
+});
+
+export const documentsTable = pgTable("documents", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  title: text("title").notNull(),
+  description: text("description"),
+  slug: text("slug").notNull().unique(),
+  fileUrl: text("file_url").notNull(),
+  previewPattern: text("preview_pattern"),
+  totalPages: integer("total_pages").notNull().default(0),
+  status: documentStatusEnum("status").notNull().default("Pending"),
+  viewCount: integer("view_count").notNull().default(0),
+  downloadCount: integer("download_count").notNull().default(0),
+  pointsRequired: integer("points_required").notNull().default(0),
+  rejectionReason: text("rejection_reason"),
+  userId: text("user_id").notNull(),
+  categoryId: text("category_id").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const userDailyCheckinsTable = pgTable("user_daily_checkins", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id").notNull(),
+  checkedInDate: text("checked_in_date").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const commentsTable = pgTable("comments", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  documentId: text("document_id").notNull(),
+  userId: text("user_id").notNull(),
+  userEmail: text("user_email").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const ratingsTable = pgTable(
+  "ratings",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    documentId: text("document_id").notNull(),
+    userId: text("user_id").notNull(),
+    stars: integer("stars").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [{ name: "ratings_doc_user_unique", columns: [t.documentId, t.userId] }],
+);
+
+export const reportReasonEnum = pgEnum("report_reason", [
+  "Bản quyền",
+  "File lỗi",
+  "Nội dung sai lệch",
+  "Nội dung không phù hợp",
+  "Khác",
+]);
+
+export const reportStatusEnum = pgEnum("report_status", ["Pending", "Resolved"]);
+
+export const reportsTable = pgTable("reports", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  documentId: text("document_id").notNull(),
+  userId: text("user_id").notNull(),
+  reason: reportReasonEnum("reason").notNull(),
+  note: text("note"),
+  status: reportStatusEnum("status").notNull().default("Pending"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const savedDocumentsTable = pgTable(
+  "saved_documents",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id").notNull(),
+    documentId: text("document_id").notNull(),
+    savedAt: timestamp("saved_at").notNull().defaultNow(),
+  },
+  (t) => [{ name: "saved_docs_user_doc_unique", columns: [t.userId, t.documentId] }],
+);
+
+export const collectionsTable = pgTable("collections", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isPublic: integer("is_public").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const collectionDocumentsTable = pgTable(
+  "collection_documents",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    collectionId: text("collection_id").notNull(),
+    documentId: text("document_id").notNull(),
+    addedAt: timestamp("added_at").notNull().defaultNow(),
+  },
+  (t) => [{ name: "col_doc_unique", columns: [t.collectionId, t.documentId] }],
+);
+
+export const insertDocumentSchema = createInsertSchema(documentsTable).omit({ id: true, createdAt: true });
+export type InsertDocument = z.infer<typeof insertDocumentSchema>;
+export type Document = typeof documentsTable.$inferSelect;
+export type Category = typeof categoriesTable.$inferSelect;
+export type Comment = typeof commentsTable.$inferSelect;
+export type Rating = typeof ratingsTable.$inferSelect;
+export type Report = typeof reportsTable.$inferSelect;
