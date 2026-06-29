@@ -76,6 +76,37 @@ export const reportsTable = pgTable("reports", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const savedDocumentsTable = pgTable(
+  "saved_documents",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id").notNull(),
+    documentId: text("document_id").notNull(),
+    savedAt: timestamp("saved_at").notNull().defaultNow(),
+  },
+  (t) => [{ name: "saved_docs_user_doc_unique", columns: [t.userId, t.documentId] }],
+);
+
+export const collectionsTable = pgTable("collections", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isPublic: integer("is_public").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const collectionDocumentsTable = pgTable(
+  "collection_documents",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    collectionId: text("collection_id").notNull(),
+    documentId: text("document_id").notNull(),
+    addedAt: timestamp("added_at").notNull().defaultNow(),
+  },
+  (t) => [{ name: "col_doc_unique", columns: [t.collectionId, t.documentId] }],
+);
+
 export const insertDocumentSchema = createInsertSchema(documentsTable).omit({ id: true, createdAt: true });
 export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 export type Document = typeof documentsTable.$inferSelect;

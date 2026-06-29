@@ -1,12 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Clock, XCircle, Upload, Star, Calendar, Coins } from "lucide-react";
-import { useState } from "react";
+import { Upload, Star, Calendar, CheckCircle, Bookmark, LayoutDashboard } from "lucide-react";
+import { useState, useEffect } from "react";
+import { LibraryTab } from "@/components/workspace/LibraryTab";
 
 function statusBadge(status: string) {
   if (status === "Approved") return <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Đã duyệt</Badge>;
@@ -14,12 +15,21 @@ function statusBadge(status: string) {
   return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Bị từ chối</Badge>;
 }
 
+type Tab = "dashboard" | "library";
+
 export default function WorkspacePage() {
   const { data: user, isLoading: authLoading } = useAuth();
   const [, navigate] = useLocation();
+  const search = useSearch();
   const qc = useQueryClient();
   const [checkinMsg, setCheckinMsg] = useState("");
   const [checkinErr, setCheckinErr] = useState("");
+  const [tab, setTab] = useState<Tab>("dashboard");
+
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    if (params.get("tab") === "library") setTab("library");
+  }, [search]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["workspace"],
@@ -59,7 +69,11 @@ export default function WorkspacePage() {
   });
 
   if (authLoading || isLoading) {
-    return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" /></div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
   }
 
   if (!user) {
@@ -78,6 +92,7 @@ export default function WorkspacePage() {
       <div className="max-w-5xl mx-auto px-4 space-y-6">
         <h1 className="text-2xl font-bold text-gray-900">Workspace của bạn</h1>
 
+        {/* Stats row */}
         <div className="grid sm:grid-cols-3 gap-4">
           <Card>
             <CardContent className="p-5 flex items-center gap-3">
@@ -135,42 +150,79 @@ export default function WorkspacePage() {
           </Card>
         </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-4">
-            <CardTitle className="text-base">Tài liệu của bạn</CardTitle>
-            <Link href="/upload">
-              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 gap-1">
-                <Upload className="w-3 h-3" /> Đăng tải
-              </Button>
-            </Link>
-          </CardHeader>
-          <CardContent>
-            {!data?.documents?.length ? (
-              <div className="text-center py-12 text-gray-400">
-                <Upload className="w-10 h-10 mx-auto mb-3 text-gray-200" />
-                <p>Bạn chưa đăng tải tài liệu nào</p>
-                <Link href="/upload">
-                  <Button variant="outline" size="sm" className="mt-3">Đăng tải ngay</Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {data.documents.map((doc: any) => (
-                  <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-gray-900 truncate">{doc.title}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{doc.totalPages} trang • {doc.viewCount} lượt xem</p>
-                      {doc.rejectionReason && (
-                        <p className="text-xs text-red-500 mt-1">{doc.rejectionReason}</p>
-                      )}
+        {/* Tab navigation */}
+        <div className="border-b border-gray-200">
+          <div className="flex gap-1">
+            <button
+              onClick={() => setTab("dashboard")}
+              className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors -mb-px ${
+                tab === "dashboard"
+                  ? "border-emerald-500 text-emerald-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              Tài liệu của tôi
+            </button>
+            <button
+              onClick={() => setTab("library")}
+              className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors -mb-px ${
+                tab === "library"
+                  ? "border-emerald-500 text-emerald-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <Bookmark className="w-4 h-4" />
+              Thư viện của tôi
+            </button>
+          </div>
+        </div>
+
+        {/* Tab content */}
+        {tab === "dashboard" ? (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-4">
+              <CardTitle className="text-base">Tài liệu đã đăng tải</CardTitle>
+              <Link href="/upload">
+                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 gap-1">
+                  <Upload className="w-3 h-3" /> Đăng tải
+                </Button>
+              </Link>
+            </CardHeader>
+            <CardContent>
+              {!data?.documents?.length ? (
+                <div className="text-center py-12 text-gray-400">
+                  <Upload className="w-10 h-10 mx-auto mb-3 text-gray-200" />
+                  <p>Bạn chưa đăng tải tài liệu nào</p>
+                  <Link href="/upload">
+                    <Button variant="outline" size="sm" className="mt-3">Đăng tải ngay</Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {data.documents.map((doc: any) => (
+                    <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm text-gray-900 truncate">{doc.title}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{doc.totalPages} trang • {doc.viewCount} lượt xem</p>
+                        {doc.rejectionReason && (
+                          <p className="text-xs text-red-500 mt-1">{doc.rejectionReason}</p>
+                        )}
+                      </div>
+                      {statusBadge(doc.status)}
                     </div>
-                    {statusBadge(doc.status)}
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-6">
+              <LibraryTab />
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import { Link } from "wouter";
 import { StarRating } from "@/components/document/StarRating";
 import { CommentSection } from "@/components/document/CommentSection";
 import { ReportDialog } from "@/components/document/ReportDialog";
+import { BookmarkButton } from "@/components/document/BookmarkButton";
 
 function useDocument(id: string) {
   return useQuery({
@@ -162,9 +163,10 @@ export default function DocumentPage() {
                   <p className="text-sm text-emerald-400">Tải xuống để xem toàn bộ nội dung</p>
                 </div>
 
-                {/* Report button */}
+                {/* Bookmark & Report row */}
                 {user && (
-                  <div className="mt-4 flex justify-end">
+                  <div className="mt-4 flex items-center justify-between">
+                    <BookmarkButton docId={id ?? ""} />
                     <ReportDialog docId={id ?? ""} />
                   </div>
                 )}

@@ -1,0 +1,25 @@
+Nhiệm vụ: Hãy lập trình tính năng Trung tâm Thông báo (Notification Center) với icon Quả chuông trên thanh Header cho dự án Valley bằng Next.js App Router, Tailwind CSS và Prisma.
+
+Yêu cầu logic và cấu trúc chi tiết:
+
+1. Cập nhật Database (Prisma Schema):
+Hãy thêm bảng sau vào schema.prisma để lưu trữ thông báo của từng user:
+- Notification: id, user_id (FK - người nhận thông báo), title (Tiêu đề), message (Nội dung chi tiết), link (Đường dẫn để user bấm vào sẽ chuyển hướng đến, ví dụ: /documents/slug-abc), is_read (Boolean, mặc định là false), created_at.
+
+2. Phía Server (Tích hợp kích hoạt thông báo):
+- Hãy viết một hàm helper `async function createNotification(userId: string, title: string, message: string, link: string)` để gọi bất cứ khi nào có sự kiện xảy ra.
+- Cập nhật các API cũ để chèn hàm này vào:
+  + Tại API Upload (Prompt 3.5): Nếu AI duyệt thành công -> tạo thông báo "Tài liệu của bạn đã được xuất bản!". Nếu AI từ chối -> tạo thông báo "Tài liệu bị từ chối: [Lý do]".
+  + Tại API Download (Prompt 5): Khi User B tải tài liệu của User A -> Tạo thông báo gửi cho User A: "Tài liệu [Tên file] của bạn vừa được tải xuống! Bạn nhận được +2 credits".
+- Tạo API Route: `/api/notifications` gồm:
+  + GET: Lấy danh sách 10 thông báo mới nhất của user hiện tại.
+  + PUT: Cập nhật tất cả thông báo của user thành `is_read = true` (Đánh dấu đã đọc).
+
+3. Phía Client (Giao diện Icon Chuông trên Header):
+- Trên thanh điều hướng (Navbar/Header), thêm một Icon Quả chuông (sử dụng Lucide-react).
+- Nếu có thông báo chưa đọc (`is_read === false`), hiển thị một chấm đỏ nhỏ (Badge) kèm số lượng thông báo chưa đọc đè lên icon.
+- Khi user bấm vào quả chuông, xổ xuống một Menu nhỏ (Popover/Dropdown) hiển thị danh sách thông báo xếp dọc:
+  + Thông báo chưa đọc sẽ có nền xám nhẹ hoặc chấm xanh báo hiệu.
+  + Mỗi thông báo là một link, bấm vào sẽ dẫn user đến trang tương ứng và tự động gọi API đổi trạng thái thành "Đã đọc".
+
+Hãy viết mã nguồn chi tiết bằng TypeScript cho cấu trúc bảng, hàm helper kích hoạt, API và component Dropdown thông báo ở Frontend.
