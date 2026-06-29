@@ -7,6 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen, Download, Eye, ArrowLeft, AlertCircle, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { Link } from "wouter";
+import { StarRating } from "@/components/document/StarRating";
+import { CommentSection } from "@/components/document/CommentSection";
+import { ReportDialog } from "@/components/document/ReportDialog";
 
 function useDocument(id: string) {
   return useQuery({
@@ -20,6 +23,31 @@ function useDocument(id: string) {
       return res.json();
     },
     retry: false,
+    enabled: !!id,
+  });
+}
+
+function useRating(docId: string) {
+  return useQuery({
+    queryKey: ["rating", docId],
+    queryFn: async () => {
+      const res = await apiFetch(`/api/documents/${docId}/rating`);
+      if (!res.ok) return { avg: 0, total: 0, userRating: null };
+      return res.json() as Promise<{ avg: number; total: number; userRating: number | null }>;
+    },
+    enabled: !!docId,
+  });
+}
+
+function useComments(docId: string) {
+  return useQuery({
+    queryKey: ["comments", docId],
+    queryFn: async () => {
+      const res = await apiFetch(`/api/documents/${docId}/comments`);
+      if (!res.ok) return { comments: [] };
+      return res.json();
+    },
+    enabled: !!docId,
   });
 }
 
@@ -28,6 +56,8 @@ export default function DocumentPage() {
   const [, navigate] = useLocation();
   const { data: user } = useAuth();
   const { data: doc, isLoading, error } = useDocument(id ?? "");
+  const { data: ratingData, refetch: refetchRating } = useRating(id ?? "");
+  const { data: commentsData } = useComments(id ?? "");
   const qc = useQueryClient();
   const [downloadMsg, setDownloadMsg] = useState("");
   const [downloadError, setDownloadError] = useState("");
@@ -57,6 +87,19 @@ export default function DocumentPage() {
     },
   });
 
+  const rateMutation = useMutation({
+    mutationFn: async (stars: number) => {
+      const res = await apiFetch(`/api/documents/${id}/rate`, {
+        method: "POST",
+        body: JSON.stringify({ stars }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Lỗi đánh giá");
+      return data;
+    },
+    onSuccess: () => refetchRating(),
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -77,6 +120,9 @@ export default function DocumentPage() {
     );
   }
 
+  const rating = ratingData ?? { avg: 0, total: 0, userRating: null };
+  const comments = commentsData?.comments ?? [];
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -85,10 +131,12 @@ export default function DocumentPage() {
         </Link>
 
         <div className="grid md:grid-cols-3 gap-6">
-          <div className="md:col-span-2">
+          {/* Left: doc info + viewer + interactions */}
+          <div className="md:col-span-2 space-y-5">
             <Card>
               <CardContent className="p-6">
                 <h1 className="text-2xl font-bold text-gray-900 mb-3">{doc.title}</h1>
+
                 <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
                   <span className="flex items-center gap-1"><Eye className="w-4 h-4" />{doc.viewCount} lượt xem</span>
                   <span className="flex items-center gap-1"><Download className="w-4 h-4" />{doc.downloadCount} lượt tải</span>
@@ -96,13 +144,46 @@ export default function DocumentPage() {
                   {doc.uploaderEmail && <span>bởi <strong>{doc.uploaderEmail}</strong></span>}
                 </div>
 
-                <div className="w-full h-64 bg-emerald-50 rounded-lg flex items-center justify-center">
-                  <BookOpen className="w-20 h-20 text-emerald-200" />
+                {/* Star rating display */}
+                <div className="mb-4">
+                  <StarRating
+                    avg={Number(rating.avg)}
+                    total={rating.total}
+                    userRating={rating.userRating}
+                    onRate={(stars) => rateMutation.mutate(stars)}
+                    isPending={rateMutation.isPending}
+                    canRate={!!user}
+                  />
                 </div>
+
+                {/* PDF preview placeholder */}
+                <div className="w-full h-64 bg-emerald-50 rounded-lg flex flex-col items-center justify-center gap-3">
+                  <BookOpen className="w-20 h-20 text-emerald-200" />
+                  <p className="text-sm text-emerald-400">Tải xuống để xem toàn bộ nội dung</p>
+                </div>
+
+                {/* Report button */}
+                {user && (
+                  <div className="mt-4 flex justify-end">
+                    <ReportDialog docId={id ?? ""} />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Comments */}
+            <Card>
+              <CardContent className="p-6">
+                <CommentSection
+                  docId={id ?? ""}
+                  comments={comments}
+                  isLoggedIn={!!user}
+                />
               </CardContent>
             </Card>
           </div>
 
+          {/* Right: download card */}
           <div className="space-y-4">
             <Card>
               <CardContent className="p-5">
@@ -152,6 +233,21 @@ export default function DocumentPage() {
               <Card className="bg-emerald-50 border-emerald-200">
                 <CardContent className="p-4 text-sm text-emerald-800">
                   <strong>Mẹo:</strong> Tải lên tài liệu để kiếm điểm, hoặc điểm danh mỗi ngày để nhận +2 điểm!
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Rating summary card */}
+            {rating.total > 0 && (
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <div className="text-4xl font-bold text-amber-500 mb-1">{rating.avg}</div>
+                  <div className="flex justify-center mb-1">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <span key={s} className={`text-lg ${s <= Math.round(Number(rating.avg)) ? "text-amber-400" : "text-gray-200"}`}>★</span>
+                    ))}
+                  </div>
+                  <div className="text-xs text-gray-500">{rating.total} đánh giá</div>
                 </CardContent>
               </Card>
             )}

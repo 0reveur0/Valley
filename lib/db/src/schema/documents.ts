@@ -35,7 +35,51 @@ export const userDailyCheckinsTable = pgTable("user_daily_checkins", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const commentsTable = pgTable("comments", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  documentId: text("document_id").notNull(),
+  userId: text("user_id").notNull(),
+  userEmail: text("user_email").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const ratingsTable = pgTable(
+  "ratings",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    documentId: text("document_id").notNull(),
+    userId: text("user_id").notNull(),
+    stars: integer("stars").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [{ name: "ratings_doc_user_unique", columns: [t.documentId, t.userId] }],
+);
+
+export const reportReasonEnum = pgEnum("report_reason", [
+  "Bản quyền",
+  "File lỗi",
+  "Nội dung sai lệch",
+  "Nội dung không phù hợp",
+  "Khác",
+]);
+
+export const reportStatusEnum = pgEnum("report_status", ["Pending", "Resolved"]);
+
+export const reportsTable = pgTable("reports", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  documentId: text("document_id").notNull(),
+  userId: text("user_id").notNull(),
+  reason: reportReasonEnum("reason").notNull(),
+  note: text("note"),
+  status: reportStatusEnum("status").notNull().default("Pending"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const insertDocumentSchema = createInsertSchema(documentsTable).omit({ id: true, createdAt: true });
 export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 export type Document = typeof documentsTable.$inferSelect;
 export type Category = typeof categoriesTable.$inferSelect;
+export type Comment = typeof commentsTable.$inferSelect;
+export type Rating = typeof ratingsTable.$inferSelect;
+export type Report = typeof reportsTable.$inferSelect;
