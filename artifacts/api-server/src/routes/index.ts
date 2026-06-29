@@ -6,6 +6,7 @@ import userRouter from "./user";
 import adminRouter from "./admin";
 import interactionsRouter from "./interactions";
 import libraryRouter from "./library";
+import notificationsRouter from "./notifications";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(userRouter);
 router.use(adminRouter);
 router.use(interactionsRouter);
 router.use(libraryRouter);
+router.use(notificationsRouter);
 
 export default router;
